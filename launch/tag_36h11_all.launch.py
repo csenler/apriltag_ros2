@@ -11,13 +11,14 @@ cfg_36h11 = {
     "z_up": True
 }
 
+
 def generate_launch_description():
-    # 'usb_cam' node from https://github.com/ros-drivers/usb_cam.git
-    cam_node = ComposableNode(
-        namespace='camera',
-        package='usb_cam', plugin='usb_cam::UsbCamNode',
-        extra_arguments=[{'use_intra_process_comms': True}],
-    )
+    # # 'usb_cam' node from https://github.com/ros-drivers/usb_cam.git
+    # cam_node = ComposableNode(
+    #     namespace='camera',
+    #     package='usb_cam', plugin='usb_cam::UsbCamNode',
+    #     extra_arguments=[{'use_intra_process_comms': True}],
+    # )
     tag_node = ComposableNode(
         name='apriltag_36h11',
         namespace='apriltag',
@@ -36,7 +37,8 @@ def generate_launch_description():
         namespace='apriltag',
         package='rclcpp_components',
         executable='component_container',
-        composable_node_descriptions=[cam_node, tag_node],
+        # composable_node_descriptions=[cam_node, tag_node],
+        composable_node_descriptions=[tag_node],
         output='screen'
     )
 

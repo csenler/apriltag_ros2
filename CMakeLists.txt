@@ -34,12 +34,12 @@ set(apriltag_DIR "${CMAKE_CURRENT_BINARY_DIR}/apriltag"
 )
 # set(apriltag_DIR ${PROJECT_SOURCE_DIR}/apriltag)
 MESSAGE("apriltag_DIR : " ${apriltag_DIR})
-# add_library(apriltag SHARED IMPORTED)
-# set_target_properties(apriltag PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/apriltag/build/libapriltag.so)
+# add_library(apriltag STATIC IMPORTED)
+set(apriltag_LIB "${CMAKE_BINARY_DIR}/apriltag/build/libapriltag.so")
+set_target_properties(apriltag PROPERTIES IMPORTED_LOCATION ${apriltag_LIB})
 # target_link_libraries(${PROJECT_NAME} PUBLIC
-# apriltag::apriltag
+# apriltag
 # )
-
 
 
 add_library(utils src/tag_functions.cpp)
@@ -49,6 +49,7 @@ set_property(TARGET utils PROPERTY POSITION_INDEPENDENT_CODE ON)
 add_library(AprilTagNode SHARED src/AprilTagNode.cpp)
 ament_target_dependencies(AprilTagNode rclcpp rclcpp_components sensor_msgs apriltag_msgs tf2_ros image_transport cv_bridge)
 target_link_libraries(AprilTagNode apriltag utils)
+
 rclcpp_components_register_node(AprilTagNode PLUGIN "AprilTagNode" EXECUTABLE "apriltag_node")
 
 ament_environment_hooks(${ament_cmake_package_templates_ENVIRONMENT_HOOK_LIBRARY_PATH})
@@ -59,7 +60,19 @@ configure_file(
   # @ONLY
 )
 
+install(TARGETS utils
+    EXPORT export_${PROJECT_NAME}
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+)
+
 install(TARGETS AprilTagNode
+    EXPORT export_${PROJECT_NAME}
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+)
+
+install(TARGETS apriltag_node
     EXPORT export_${PROJECT_NAME}
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
@@ -69,4 +82,27 @@ install(DIRECTORY cfg/ DESTINATION share/${PROJECT_NAME}/cfg)
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
-ament_package()
+# # normally with colcon, executables & binaries should install under workspace/install directory !!!
+# add_custom_command(TARGET AprilTagNode POST_BUILD
+#   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:AprilTagNode> ${PROJECT_SOURCE_DIR}/bin/slam_node
+#   COMMENT "Copied AprilTagNode into bin directory"
+# )
+
+# add_custom_command(TARGET utils POST_BUILD
+#   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:utils> ${PROJECT_SOURCE_DIR}/bin/image_streamer_node
+#   COMMENT "Copied utils into bin directory"
+# )
+
+# add_custom_command(POST_BUILD
+#   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${apriltag_LIB}> ${apriltag_LIB}
+#   COMMENT "Copied apriltag_lib into bin directory"
+# )
+
+# install(TARGETS apriltag_node
+#     EXPORT export_${PROJECT_NAME}
+#     ARCHIVE DESTINATION ${PROJECT_SOURCE_DIR}/deploy
+#     LIBRARY DESTINATION ${PROJECT_SOURCE_DIR}/deploy
+# )
+
+# ament_package()
+ament_package(CONFIG_EXTRAS ConfigExtras.cmake)
