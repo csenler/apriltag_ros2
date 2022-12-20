@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "${default}",
+                "limitSymbolsToIncludedHeaders": false
+            },
+            "includePath": [
+                "/usr/include/**",
+                "/opt/ros/foxy/include",
+                "/home/csenler/ros2_ws"
+            ],
+            "name": "ROS_WSL",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        }
+    ],
+    "version": 4
+}

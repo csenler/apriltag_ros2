@@ -5,14 +5,18 @@ project(apriltag_ros)
 set(CMAKE_CXX_STANDARD 14)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Werror -Wall -Wextra -Wpedantic)
+  # add_compile_options(-Werror -Wall -Wextra -Wpedantic -Wno-unused-variable -Wno-unused-parameter -Wno-sign-compare)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-variable -Wno-unused-parameter -Wno-sign-compare)
   add_link_options("-Wl,-z,relro,-z,now,-z,defs")
 endif()
 
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(apriltag_msgs REQUIRED)
+
+# find_package(apriltag_msgs REQUIRED)
+include(ConfigExtras.cmake) # instead of find_package which fails, we will use this file to find necessery package
+
 find_package(tf2_ros REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(cv_bridge REQUIRED)
@@ -22,18 +26,38 @@ INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
 
 find_package(Threads REQUIRED)
 
-find_package(apriltag 3.2 REQUIRED)
+# find_package(apriltag 3.2 REQUIRED)
+# find_package(apriltag CONFIG REQUIRED)
+add_subdirectory(apriltag)
+set(apriltag_DIR "${CMAKE_CURRENT_BINARY_DIR}/apriltag"
+  CACHE INTERNAL "Directory with apriltagConfig.cmake"
+)
+# set(apriltag_DIR ${PROJECT_SOURCE_DIR}/apriltag)
+MESSAGE("apriltag_DIR : " ${apriltag_DIR})
+# add_library(apriltag SHARED IMPORTED)
+# set_target_properties(apriltag PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/apriltag/build/libapriltag.so)
+# target_link_libraries(${PROJECT_NAME} PUBLIC
+# apriltag::apriltag
+# )
+
+
 
 add_library(utils src/tag_functions.cpp)
-target_link_libraries(utils apriltag::apriltag)
+target_link_libraries(utils apriltag)
 set_property(TARGET utils PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 add_library(AprilTagNode SHARED src/AprilTagNode.cpp)
 ament_target_dependencies(AprilTagNode rclcpp rclcpp_components sensor_msgs apriltag_msgs tf2_ros image_transport cv_bridge)
-target_link_libraries(AprilTagNode apriltag::apriltag utils)
+target_link_libraries(AprilTagNode apriltag utils)
 rclcpp_components_register_node(AprilTagNode PLUGIN "AprilTagNode" EXECUTABLE "apriltag_node")
 
 ament_environment_hooks(${ament_cmake_package_templates_ENVIRONMENT_HOOK_LIBRARY_PATH})
+
+configure_file(
+  ${PROJECT_SOURCE_DIR}/apriltag/apriltag.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/apriltag.pc
+  # @ONLY
+)
 
 install(TARGETS AprilTagNode
     EXPORT export_${PROJECT_NAME}
